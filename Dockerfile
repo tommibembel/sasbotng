@@ -13,13 +13,10 @@ RUN npm install
 # Kopiere den gesamten Projektinhalt in den Container
 COPY . .
 
-# Stelle sicher, dass ENV-Dateien im Container verfügbar sind (falls `.env` gebraucht wird)
-COPY .env /app/.env
-
+# Pakete installieren
 RUN apk update && \
     apk upgrade && \
     apk add xvfb chromium
-
 
 # Exponiere den Port (entspricht deinem PORT in der .env-Datei oder dem Standard 3000)
 EXPOSE 3000
