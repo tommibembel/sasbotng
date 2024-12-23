@@ -172,8 +172,8 @@ app.get("/cron/start", (req, res) => {
     if (isCronRunning) {
         return res.status(400).send("Cronjob läuft bereits.");
     }
-
-    scrapeCron = cron.schedule("*/15 * * * *", async () => {
+    const cronTime = process.env.cronTime || "*/15 * * * *"
+    scrapeCron = cron.schedule(cronTime, async () => {
         const delay = getRandomDelay(180); // Zufällig bis zu 180 Sekunden warten
         console.log(`Warte ${delay / 1000} Sekunden, bevor Scraping gestartet wird.`);
         setTimeout(async () => {
