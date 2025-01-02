@@ -1,5 +1,5 @@
 # Verwende ein offizielles Node.js-Image als Basis (Node.js LTS Version)
-FROM node:23-alpine3.21
+FROM node:23-alpine3.19
 
 # Setze das Arbeitsverzeichnis im Container
 WORKDIR /app
@@ -17,6 +17,8 @@ COPY . .
 RUN apk update && \
     apk upgrade && \
     apk add xvfb chromium
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Exponiere den Port (entspricht deinem PORT in der .env-Datei oder dem Standard 3000)
 EXPOSE 3000
