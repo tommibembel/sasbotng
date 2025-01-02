@@ -30,8 +30,6 @@ async function scrape() {
             headless: true,
             defaultViewport: false,
             args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
                 '--disable-gpu', // Disable GPU acceleration
             ],
         });
