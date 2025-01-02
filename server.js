@@ -27,9 +27,11 @@ async function scrape() {
     try {
         console.log("Starte Scraping...");
         const { browser, page } = await connect({
-            headless: true,
+            headless: false,
             defaultViewport: false,
             args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
                 '--disable-gpu', // Disable GPU acceleration
             ],
         });
