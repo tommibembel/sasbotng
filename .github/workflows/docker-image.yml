@@ -16,10 +16,12 @@ jobs:
     - name: checkout stuff
       uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build . --file Dockerfile --tag tommibembel/sasbotng:latest
     - name: docker login
       uses: docker/login-action@v3.3.0
       with:
-        username: # optional
-        password: # optional
+        username: ${{ secrets.DOCKER_LOGIN }}
+        password: ${{ secrets.DOCKER_PW }}
+    - name: push it
+      run: docker push tommibembel/sasbotng:latest
         
