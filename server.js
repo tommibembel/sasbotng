@@ -39,13 +39,13 @@ async function scrape() {
         await page.goto(process.env.url, { waitUntil: "networkidle2" });
         await page.type("input[id=username]", process.env.email);
         await page.click('button[type=submit]');
-        await page.waitForSelector('input[id=password]');
+        await page.waitForSelector('input[id=password]', { timeout: 30000 });
         await page.type("input[id=password]", process.env.password);
         await page.click('button[type=submit]');
-        await page.waitForSelector('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]', { timeout: 10000 });
+        await page.waitForSelector('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]', { timeout: 30000 });
         await page.click('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]');
 
-        await page.waitForNetworkIdle({ timeout: 10000 });
+        await page.waitForNetworkIdle({ timeout: 30000 });
         const tasks = await page.evaluate(() => {
             const elements = document.querySelectorAll("h2");
             const availableTasks = {};
