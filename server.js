@@ -27,7 +27,7 @@ async function scrape() {
     try {
         console.log("Starte Scraping...");
         const { browser, page } = await connect({
-            headless: false,
+            headless: true,
             defaultViewport: false,
         });
 
