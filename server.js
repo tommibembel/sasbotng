@@ -29,6 +29,9 @@ async function scrape() {
         const { browser, page } = await connect({
             headless: true,
             defaultViewport: false,
+            args: [
+                '--disable-gpu', // Disable GPU acceleration
+            ],
         });
 
         await page.goto(process.env.url, { waitUntil: "networkidle2" });
