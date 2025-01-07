@@ -26,30 +26,42 @@ function getRandomDelay(maxSeconds = 300) { // Standardmäßig 0-300 Sekunden
 async function scrape() {
     try {
         console.log("Starte Scraping...");
+        const browserHeight = process.env.browser_height || 1024;
+        const browserWidth = process.env.browser_width || 786;
         const { browser, page } = await connect({
-            headless: false,
+            headless: true,
             defaultViewport: false,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-gpu', // Disable GPU acceleration
+                `--window-size=${browserWidth},${browserHeight}`,
             ],
         });
-
+        await page.setViewport({
+            width: Number(browserWidth),
+            height: Number(browserHeight),
+        })
         await page.goto(process.env.url, { waitUntil: "networkidle2" });
         await page.type("input[id=username]", process.env.email);
         await page.click('button[type=submit]');
         await page.waitForSelector('input[id=password]', { timeout: 30000 });
         await page.type("input[id=password]", process.env.password);
         await page.click('button[type=submit]');
-        await page.waitForSelector('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]', { timeout: 30000 });
-        await page.click('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]');
-
+        // await page.waitForSelector('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]', { timeout: 30000 });
+        // await page.click('button[class="bh-button bh-raised-button bh-accent-button bh-get-task-button"]');
         await page.waitForNetworkIdle({ timeout: 30000 });
+        await page.click("#appView > div > div > div.requests-dashboard.requests-dashboard--with-marketplace > div.sharktank-drawer > div.note > button");
+        await page.waitForNetworkIdle({ timeout: 30000 });
+        page.on('console', msg => {
+            for (let i = 0; i < msg.args.length; ++i)
+                console.log(`${i}: ${msg.args[i]}`);
+        });
         const tasks = await page.evaluate(() => {
             const elements = document.querySelectorAll("h2");
             const availableTasks = {};
             let currentTask = null;
+            console.log("Dumdidum");
             for (const element of elements) {
                 if (element.tagName === "H2") {
                     currentTask = element.innerText;
@@ -58,14 +70,18 @@ async function scrape() {
                     availableTasks[currentTask].push(element.innerText);
                 }
             }
-            delete availableTasks["No Current Tasks"];
-            delete availableTasks["No tasks due in this period"];
             return availableTasks;
         });
-
+        const debugMode = process.env.debug_mode || 'off';
+        delete tasks["No Current Tasks"];
+        if (debugMode === "off") {
+            // Send messages if there are No tasks due in this period
+            delete tasks["No tasks due in this period"];
+        }
         if (tasks && Object.keys(tasks).length > 0) {
             const screenshotPath = process.env.screenshotPath || "screenshot.png";
-            await page.screenshot({ path: screenshotPath, fullPage: true });
+            //await page.screenshot({ path: screenshotPath, fullPage: true });
+            await page.screenshot({ path: screenshotPath });
             console.log("Tasks gefunden:", tasks);
 
             const message = Object.keys(tasks).join("\n");
@@ -142,24 +158,25 @@ async function sendTelegramNotification(message, screenshotPath) {
             throw new Error(`Telegram-Fehler beim Nachrichtensenden: ${errorText}`);
         }
         console.log("Telegram-Nachricht erfolgreich gesendet.");
+        if (screenshotPath) {
+            const formData = new FormData();
+            formData.append("chat_id", telegramChatId);
+            formData.append("photo", await fs.readFile(screenshotPath), "screenshot.png");
 
-        const formData = new FormData();
-        formData.append("chat_id", telegramChatId);
-        formData.append("photo", await fs.readFile(screenshotPath), "screenshot.png");
+            const photoResponse = await fetch(
+                `https://api.telegram.org/bot${telegramBotToken}/sendPhoto`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
 
-        const photoResponse = await fetch(
-            `https://api.telegram.org/bot${telegramBotToken}/sendPhoto`,
-            {
-                method: "POST",
-                body: formData,
+            if (!photoResponse.ok) {
+                const errorText = await photoResponse.text();
+                throw new Error(`Telegram-Fehler beim Foto-Senden: ${errorText}`);
             }
-        );
-
-        if (!photoResponse.ok) {
-            const errorText = await photoResponse.text();
-            throw new Error(`Telegram-Fehler beim Foto-Senden: ${errorText}`);
+            console.log("Telegram-Screenshot erfolgreich gesendet.");
         }
-        console.log("Telegram-Screenshot erfolgreich gesendet.");
     } catch (error) {
         console.error("Fehler bei der Telegram-Benachrichtigung:", error);
     }
