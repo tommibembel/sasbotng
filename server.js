@@ -29,7 +29,8 @@ async function scrape() {
         const browserHeight = process.env.browser_height || 1024;
         const browserWidth = process.env.browser_width || 786;
         const { browser, page } = await connect({
-            headless: true,
+            headless: false,
+            slomo: 500,
             defaultViewport: false,
             args: [
                 '--no-sandbox',
